@@ -1,13 +1,15 @@
 import React from 'react'
 import { withRouter } from 'react-router-dom'
 
-import LancamentoService from '../../app/services/LancamentoService'
-import LocalStorageService from '../../app/services/LocalStorageService'
-
 import Card from '../../components/Card'
 import FormGroup from '../../components/Form-group'
 import SelectMenu from '../../components/SelectMenu'
 import LancamentoTable from './LancamentoTable'
+import LancamentoService from '../../app/services/LancamentoService'
+import LocalStorageService from '../../app/services/LocalStorageService'
+
+import { Dialog } from 'primereact/dialog';
+import { Button } from 'primereact/button';
 
 import { mensagemSucesso, mensagemErro } from '../../components/Toastr'
 
@@ -18,6 +20,8 @@ class ConsultaLancamentos extends React.Component {
         mes: null,
         tipo: null,
         descricao: null,
+        exibeConfirmacaoDelecao: false,
+        lancamentoDeletar: null,
         lancamentos: []
     }
 
@@ -57,25 +61,43 @@ class ConsultaLancamentos extends React.Component {
 
     }
 
-    deletarLancamento = (id) => {
+    deletarLancamento = () => {
         
         this.service
-            .deletar(id)
+            .deletar(this.state.lancamentoDeletar.id)
             .then(response => {
                 mensagemSucesso("Lançamento excluído com sucesso!")
-
-                this.buscarLancamentos()
+                
+                const lancamentos = this.state.lancamentos
+                lancamentos.splice(lancamentos.indexOf(this.state.lancamentoDeletar), 1)
+                
+                this.setState({lancamentos: lancamentos, exibeConfirmacaoDelecao: false, lancamentoDeletar: null})
                 
             }).catch(error => {
                 mensagemErro(error.response.data)
             })
     }
 
+    onHideConfirmDelete = () => {
+        this.setState({exibeConfirmacaoDelecao: false, lancamentoDeletar: null})
+    }
+
+    onShowConfirmDelete = (lancamento) => {
+        this.setState({exibeConfirmacaoDelecao: true, lancamentoDeletar: lancamento})
+    }    
+
     render() {
 
         const listMeses = this.service.obterListaMeses();
 
         const listaTiposLancamentos = this.service.obterListaTipos()
+
+        const confirmDeleteActions = (
+            <div>
+                <Button label="Sim" icon="pi pi-check" onClick={this.deletarLancamento} />
+                <Button label="Não" icon="pi pi-times" className="p-button-secondary" onClick={this.onHideConfirmDelete} />
+            </div>
+        );
 
         return (
             <Card title="Consulta Lançamentos">
@@ -122,9 +144,19 @@ class ConsultaLancamentos extends React.Component {
                         <div className="bs-component">
                             <LancamentoTable 
                                 lancamentos={this.state.lancamentos} 
-                                deleteAction={this.deletarLancamento}/>
+                                deleteAction={this.onShowConfirmDelete}/>
                         </div>
                     </div>
+                </div>
+                <div>
+                <Dialog header="Confirmação!" 
+                        visible={this.state.exibeConfirmacaoDelecao} 
+                        style={{ width: '50vw' }} 
+                        modal ={true}
+                        footer={confirmDeleteActions} 
+                        onHide={() => this.onHideConfirmDelete() }>
+                    <p>Confirma a deleção deste lancamento?</p>
+                </Dialog>
                 </div>
             </Card>
         )
