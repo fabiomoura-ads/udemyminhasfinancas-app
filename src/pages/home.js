@@ -5,6 +5,7 @@ import LocalStorageService from '../app/services/LocalStorageService'
 class Home extends React.Component {
 
     state = {
+        usuario: null,
         saldo: 0
     }
 
@@ -20,6 +21,8 @@ class Home extends React.Component {
         if ( !usuarioLogado) {
             this.props.history.push("/login");
         }
+
+        this.setState({usuario: usuarioLogado });
 
         this.service.buscaSaldo({
             id: usuarioLogado.id

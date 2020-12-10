@@ -14,6 +14,10 @@ class UsuarioService extends ApiService {
         const { id } = usuario;
         return this.get(`/${id}/saldo`);
     }
+
+    salvar(usuario){
+        return this.post('', usuario)
+    }
     
 }
 

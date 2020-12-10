@@ -22,7 +22,7 @@ function Navbar() {
                     <ul className="navbar-nav">
                         <NavbarItem link="#/home" label="Home" />
                         <NavbarItem link="#/cadastro-usuarios" label="Usuários" />
-                        <NavbarItem link="#" label="Lançamentos" />
+                        <NavbarItem link="#/consulta-lancamentos" label="Lançamentos" />
                         <NavbarItem link="#/login" label="Login" />
                     </ul>
                 </div>
