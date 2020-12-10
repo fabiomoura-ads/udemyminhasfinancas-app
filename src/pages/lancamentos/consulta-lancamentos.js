@@ -9,14 +9,15 @@ import FormGroup from '../../components/Form-group'
 import SelectMenu from '../../components/SelectMenu'
 import LancamentoTable from './LancamentoTable'
 
-import { mensagemErro } from '../../components/Toastr'
+import { mensagemSucesso, mensagemErro } from '../../components/Toastr'
 
 class ConsultaLancamentos extends React.Component {
 
     state = {
-        ano: null,
+        ano: (new Date()).getFullYear(),
         mes: null,
         tipo: null,
+        descricao: null,
         lancamentos: []
     }
 
@@ -26,60 +27,58 @@ class ConsultaLancamentos extends React.Component {
     }
 
     componentDidMount() {
-
         this.buscarLancamentos()
-        
-
     }
 
     buscarLancamentos = () => {
 
+        if ( !this.state.ano ) {
+            mensagemErro('Ano é obrigatório para pesquisa.')    
+            return;            
+        }
+
         const usuarioLogado = LocalStorageService.obterItem('_usuario_logado');
 
-        this.service.consultarLancamentos(usuarioLogado.id, {
+        const lancamentoFiltro = {
+            usuario: usuarioLogado.id,
             ano: this.state.ano,
             mes: this.state.mes,
-            tipo: this.state.tipo
-        }).then(response => {
-            console.log(response.data)
-            this.setState({ lancamentos: response.data })
-        }).catch(error => {
-            //console.log(error.response.data)
-            //mensagemErro(error.response.data)
-        })
+            tipo: this.state.tipo,
+            descricao: this.state.descricao
+        }
 
+        this.service
+            .consultarLancamentos(lancamentoFiltro)
+            .then(response => {
+                this.setState({ lancamentos: response.data })
+            }).catch(error => {
+                mensagemErro(error.response.data)
+            })
+
+    }
+
+    deletarLancamento = (id) => {
+        
+        this.service
+            .deletar(id)
+            .then(response => {
+                mensagemSucesso("Lançamento excluído com sucesso!")
+
+                this.buscarLancamentos()
+                
+            }).catch(error => {
+                mensagemErro(error.response.data)
+            })
     }
 
     render() {
 
-        const listMeses = [
-            { value: '', label: 'SELECIONE...' },
-            { value: 1, label: 'Janeiro' },
-            { value: 2, label: 'Fevereiro' },
-            { value: 3, label: 'Março' },
-            { value: 4, label: 'Abril' },
-            { value: 5, label: 'Maio' },
-            { value: 6, label: 'Junho' },
-            { value: 7, label: 'Julho' },
-            { value: 8, label: 'Agosto' },
-            { value: 9, label: 'Setembro' },
-            { value: 10, label: 'Outubro' },
-            { value: 11, label: 'Novembro' },
-            { value: 12, label: 'Dezembro' }
-        ]
+        const listMeses = this.service.obterListaMeses();
 
-        const listaTiposLancamentos = [
-            { value: '', label: 'SELECIONE...' },
-            { value: 'RECEITA', label: 'Receita' },
-            { value: 'DESPESA', label: 'Despesa' }
-        ]
-
-        const lancamentos = [
-            { descricao: 'Salario', valor: 100, mes: 1, anos: 2020 },
-        ]
+        const listaTiposLancamentos = this.service.obterListaTipos()
 
         return (
-            <Card label="Consulta Lançamentos">
+            <Card title="Consulta Lançamentos">
                 <div className="row">
                     <div className="col-lg-6">
                         <div className="bs-component">
@@ -87,6 +86,7 @@ class ConsultaLancamentos extends React.Component {
                                 <input type="text"
                                     className="form-control"
                                     id="inputAno"
+                                    value={this.state.ano}
                                     aria-describedby="emailHelp"
                                     onChange={e => this.setState({ ano: e.target.value })}
                                     placeholder="Digite o Ano" />
@@ -96,6 +96,13 @@ class ConsultaLancamentos extends React.Component {
                                     id="inputMes"
                                     lista={listMeses}
                                     onChange={e => this.setState({ mes: e.target.value })} />
+                            </FormGroup>
+                            <FormGroup htmlFor="inputDescricao" label="Descrição" >
+                                <input type="text"
+                                    className="form-control"
+                                    id="inputDescricao"
+                                    onChange={e => this.setState({ descricao: e.target.value })}
+                                    placeholder="Digite a descrição" />
                             </FormGroup>
                             <FormGroup htmlFor="inputTipoLancamento" label="Tipo Lançamento " >
                                 <SelectMenu className="form-control"
@@ -113,7 +120,9 @@ class ConsultaLancamentos extends React.Component {
                 <div className="row">
                     <div className="col-lg-12">
                         <div className="bs-component">
-                            <LancamentoTable lancamentos={this.state.lancamentos} />
+                            <LancamentoTable 
+                                lancamentos={this.state.lancamentos} 
+                                deleteAction={this.deletarLancamento}/>
                         </div>
                     </div>
                 </div>
