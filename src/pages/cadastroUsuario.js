@@ -5,9 +5,9 @@ import UsuarioService from '../app/services/UsuarioService'
 
 import Card from '../components/Card'
 import FormGroup from '../components/Form-group'
-import { mensagemAlerta, mensagemErro, mensagemSucesso } from '../components/Toastr'
+import * as messages from '../components/Toastr'
 
-class CadastroUsuario extends React.Component{
+class CadastroUsuario extends React.Component {
 
     state = {
         nome: '',
@@ -16,104 +16,87 @@ class CadastroUsuario extends React.Component{
         confirmacaoSenha: ''
     }
 
-    constructor(){
+    constructor() {
         super();
-        this.service = new UsuarioService();        
+        this.service = new UsuarioService();
     }
 
     cancelar = () => {
         this.props.history.push('/login')
     }
 
-    validaDados = () => {
-        
-        const msg = [];
-
-        if ( !this.state.nome.toString().trim() ){
-            msg.push("Nome é obrigatório e não foi informado.");
-        }
-
-        if ( !this.state.email.toString().trim() ){
-            msg.push("Email é obrigatório e não foi informado.");
-        } else if (  !this.state.email.match(/^[a-z0-9.]+@[a-z0-9]+\.[a-z]/) ){
-            msg.push("Email não é válido.");
-        }
-
-        if ( !this.state.senha.toString().trim() || !this.state.confirmacaoSenha.toString().trim()  ) {
-            msg.push("Senha ou confirmação de senha não informado.");
-        } else if ( this.state.senha.toString().trim()  != this.state.confirmacaoSenha.toString().trim()  ) {
-            msg.push("Confirmação de senha não confere.");            
-        }
-
-        return msg;
-        
-    }
-
     cadastrarUsuario = () => {
 
-        const arErros = this.validaDados();
+        const { nome, email, senha, confirmacaoSenha } = this.state
+        const usuario = { nome, email, senha, confirmacaoSenha }
 
-        if (arErros.length > 0 ) {
-            arErros.forEach(msg => {
-                mensagemErro(msg)
-            })
-            return false;
+        try {
+
+            this.service.validar(usuario);
+
+        } catch (erro) {
+            erro.mensagens.forEach(msg => { messages.mensagemErro(msg) })
+
+            return false
         }
 
-        this.service.salvar({
-            nome: this.state.nome,
-            email: this.state.email,
-            senha: this.state.senha
-        }).then(response => {
-            mensagemSucesso("Usuário cadastrado com sucesso!");
-            this.props.history.push('/login')
-        }).catch(error => {
-            mensagemErro(error.response.data);
-        })
-            
+        this.service.salvar(usuario)
+            .then(response => {
+                messages.mensagemSucesso("Usuário cadastrado com sucesso!");
+                this.props.history.push('/login')
+            }).catch(error => {
+                messages.mensagemErro(error.response.data);
+            })
+
     }
 
-    render(){
-        return(
+    render() {
+        return (
             <Card title="Cadastro de Usuário">
                 <div className="row">
                     <div className="col-lg-12">
                         <div className="bs-component">
                             <fieldset>
                                 <FormGroup htmlFor="inputNome" label="Nome *">
-                                    <input  type="text" 
-                                            className="form-control" 
-                                            id="inputNome" 
-                                            onChange={e => this.setState({nome: e.target.value})}
-                                            placeholder="Digite o Nome" />
+                                    <input type="text"
+                                        className="form-control"
+                                        id="inputNome"
+                                        onChange={e => this.setState({ nome: e.target.value })}
+                                        placeholder="Digite o Nome" />
                                 </FormGroup>
                                 <FormGroup htmlFor="inputEmail" label="Email *">
-                                    <input  type="email" 
-                                            className="form-control" 
-                                            id="inputEmail" 
-                                            onChange={e => this.setState({email: e.target.value})}                                            
-                                            placeholder="Digite o Email" />
+                                    <input type="email"
+                                        className="form-control"
+                                        id="inputEmail"
+                                        onChange={e => this.setState({ email: e.target.value })}
+                                        placeholder="Digite o Email" />
                                 </FormGroup>
                                 <FormGroup htmlFor="inputSenha" label="Senha *">
-                                    <input  type="password" 
-                                            className="form-control" 
-                                            id="inputSenha" 
-                                            onChange={e => this.setState({senha: e.target.value})}
-                                            placeholder="Digite a Senha" />
+                                    <input type="password"
+                                        className="form-control"
+                                        id="inputSenha"
+                                        onChange={e => this.setState({ senha: e.target.value })}
+                                        placeholder="Digite a Senha" />
                                 </FormGroup>
                                 <FormGroup htmlFor="inputConfirmacaoDeSenha" label="Repita a Senha *">
-                                    <input  type="password" 
-                                            className="form-control" 
-                                            id="inputConfirmacaoDeSenha" 
-                                            onChange={e => this.setState({confirmacaoSenha: e.target.value})}
-                                            placeholder="Repita a Senha" />
+                                    <input type="password"
+                                        className="form-control"
+                                        id="inputConfirmacaoDeSenha"
+                                        onChange={e => this.setState({ confirmacaoSenha: e.target.value })}
+                                        placeholder="Repita a Senha" />
                                 </FormGroup>
-                                <button onClick={this.cadastrarUsuario} className="btn btn-success">Salvar</button>                                                   
-                                <button onClick={this.cancelar} className="btn btn-danger">Cancelar</button>                                                                                   
+                                <button onClick={this.cadastrarUsuario} 
+                                    className="btn btn-success">
+                                        <i className="pi pi-save"></i> Salvar
+                                        </button>
+                                <button onClick={this.cancelar} 
+                                className="btn btn-danger">
+                                    <i className="pi pi-times"></i>Cancelar
+                                    </button>
                             </fieldset>
                         </div>
                     </div>
-                </div>                        
+                </div>
             </Card>
         )
     }

@@ -1,7 +1,7 @@
 import React from 'react'
 import currencyFormatter from 'currency-formatter'
 
-export default props => {
+const LancamentoTable = props => {
 
     const linhas = props.lancamentos.map((lancamento, index) => {
         return (
@@ -12,11 +12,36 @@ export default props => {
                 <td>{lancamento.dataCadastro}</td>
                 <td>{lancamento.status}</td>
                 <td>
-                    <button type="button" className="btn btn-primary">Editar</button>
-                    <button type="button" className="btn btn-danger" onClick={() => props.deleteAction(lancamento)}>Deletar</button>
+                    <button type="button"
+                        title="Efetivar"
+                        disabled={ lancamento.status !== "PENDENTE" }
+                        className="btn btn-success"
+                        onClick={() => props.updateStatusAction(lancamento, 'EFETIVADO')}>
+                        <i className="pi pi-check" />
+                    </button>
+                    <button type="button"
+                        title="Cancelar"
+                        disabled={ lancamento.status !== "PENDENTE" }
+                        className="btn btn-warning"
+                        onClick={() => props.updateStatusAction(lancamento, 'CANCELADO')}>
+                        <i className="pi pi-times" />
+                    </button>
+                    <button type="button"
+                        title="Editar"
+                        className="btn btn-primary"
+                        onClick={() => props.editAction(lancamento)}>
+                        <i className="pi pi-pencil" />
+                    </button>
+                    <button type="button"
+                        title="Deletar"
+                        className="btn btn-danger"
+                        onClick={() => props.deleteAction(lancamento)}>
+                        <i className="pi pi-trash" />
+                    </button>
                 </td>
             </tr>
         )
+
     })
 
     return (
@@ -38,3 +63,5 @@ export default props => {
 
     )
 }
+
+export default LancamentoTable;

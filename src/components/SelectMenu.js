@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default (props) => {
+const SelectMenu = props => {
     
     const options = props.lista.map((item,index)=>{
         return <option key={index} value={item.value}>{item.label}</option>
@@ -13,3 +13,4 @@ export default (props) => {
     )
 }
 
+export default SelectMenu;

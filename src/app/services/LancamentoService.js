@@ -1,4 +1,5 @@
 import ApiService from '../apiservice'
+import ErroValidacao from '../services/exceptions/ErroValidacao'
 
 class LancamentoService extends ApiService {
 
@@ -22,6 +23,32 @@ class LancamentoService extends ApiService {
             { value: 11, label: 'Novembro' },
             { value: 12, label: 'Dezembro' }
         ]
+    }
+
+    validar(lancamento){
+        const erros = [];
+        if ( !lancamento.descricao ){
+            erros.push('Informe uma descrição.')
+        }
+        if ( !lancamento.ano ){
+            erros.push('Informe um ano.')
+        }
+        if ( !lancamento.mes ){
+            erros.push('Informe um mês.')
+        }
+        if ( !lancamento.tipo ){
+            erros.push('Informe um tipo.')
+        }
+        if ( !lancamento.valor ){
+            erros.push('Informe um valor.')
+        }  
+        if ( erros && erros.length > 0 ) {
+            throw new ErroValidacao(erros);
+        }
+    }
+
+    atualizarStatus(id, status){
+        return this.put(`/${id}/atualiza-status`, { status })
     }
 
     obterListaTipos() {
@@ -58,7 +85,17 @@ class LancamentoService extends ApiService {
         return this.delete(`/${id}`);
     }
 
+    salvar(lancamento){
+        return this.post('/', lancamento);
+    }
 
+    obterPorId(id, idUsuario){
+        return this.get(`/${id}?usuario=${idUsuario}`)
+    }
+
+    atualizar(lancamento){
+        return this.put(`/${lancamento.id}`, lancamento)
+    }    
 
 }
 

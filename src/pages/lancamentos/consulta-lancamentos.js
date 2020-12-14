@@ -11,7 +11,7 @@ import LocalStorageService from '../../app/services/LocalStorageService'
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 
-import { mensagemSucesso, mensagemErro } from '../../components/Toastr'
+import * as messages from '../../components/Toastr'
 
 class ConsultaLancamentos extends React.Component {
 
@@ -36,9 +36,9 @@ class ConsultaLancamentos extends React.Component {
 
     buscarLancamentos = () => {
 
-        if ( !this.state.ano ) {
-            mensagemErro('Ano é obrigatório para pesquisa.')    
-            return;            
+        if (!this.state.ano) {
+            messages.mensagemErro('Ano é obrigatório para pesquisa.')
+            return;
         }
 
         const usuarioLogado = LocalStorageService.obterItem('_usuario_logado');
@@ -54,37 +54,65 @@ class ConsultaLancamentos extends React.Component {
         this.service
             .consultarLancamentos(lancamentoFiltro)
             .then(response => {
+                if (response.data.length === 0) {
+                    messages.mensagemAlerta('Nenhum lançamento encontrado.')
+                }
                 this.setState({ lancamentos: response.data })
             }).catch(error => {
-                mensagemErro(error.response.data)
+                messages.mensagemErro(error.response.data)
             })
 
     }
 
     deletarLancamento = () => {
-        
+
         this.service
             .deletar(this.state.lancamentoDeletar.id)
             .then(response => {
-                mensagemSucesso("Lançamento excluído com sucesso!")
-                
+                messages.mensagemSucesso("Lançamento excluído com sucesso!")
+
                 const lancamentos = this.state.lancamentos
                 lancamentos.splice(lancamentos.indexOf(this.state.lancamentoDeletar), 1)
-                
-                this.setState({lancamentos: lancamentos, exibeConfirmacaoDelecao: false, lancamentoDeletar: null})
-                
+
+                this.setState({ lancamentos: lancamentos, exibeConfirmacaoDelecao: false, lancamentoDeletar: null })
+
             }).catch(error => {
-                mensagemErro(error.response.data)
+                messages.mensagemErro(error.response.data)
             })
     }
 
     onHideConfirmDelete = () => {
-        this.setState({exibeConfirmacaoDelecao: false, lancamentoDeletar: null})
+        this.setState({ exibeConfirmacaoDelecao: false, lancamentoDeletar: null })
     }
 
     onShowConfirmDelete = (lancamento) => {
-        this.setState({exibeConfirmacaoDelecao: true, lancamentoDeletar: lancamento})
-    }    
+        this.setState({ exibeConfirmacaoDelecao: true, lancamentoDeletar: lancamento })
+    }
+
+    cadastrarLancamento = () => {
+        this.props.history.push('cadastrar-lancamento');
+    }
+
+    onEditLancamento = (lancamento) => {
+        this.props.history.push(`cadastrar-lancamento/${lancamento.id}`)
+    }
+
+    atualizarStatus = (lancamento, status) => {
+        this.service.atualizarStatus(lancamento.id, status)
+            .then(response => {
+                const lancamentos = this.state.lancamentos
+
+                lancamento.status = status
+                lancamentos[lancamentos.indexOf(lancamento)] = lancamento
+                this.setState({ lancamentos })
+
+                messages.mensagemSucesso(`Lançamento ${status} com sucesso!`)
+
+            })
+            .catch(error => {
+                messages.mensagemErro(`Não foi possível ${status} o lançameno!`)
+            })
+    }
 
     render() {
 
@@ -132,8 +160,8 @@ class ConsultaLancamentos extends React.Component {
                                     lista={listaTiposLancamentos}
                                     onChange={e => this.setState({ tipo: e.target.value })} />
                             </FormGroup>
-                            <button onClick={this.buscarLancamentos} className="btn btn-success">Buscar</button>
-                            <button className="btn btn-danger">Cadastrar</button>
+                            <button onClick={this.buscarLancamentos} className="btn btn-success"><i className="pi pi-search"></i> Buscar</button>
+                            <button onClick={this.cadastrarLancamento} className="btn btn-danger"><i className="pi pi-plus"></i> Cadastrar</button>
                         </div>
                     </div>
                 </div>
@@ -142,21 +170,23 @@ class ConsultaLancamentos extends React.Component {
                 <div className="row">
                     <div className="col-lg-12">
                         <div className="bs-component">
-                            <LancamentoTable 
-                                lancamentos={this.state.lancamentos} 
-                                deleteAction={this.onShowConfirmDelete}/>
+                            <LancamentoTable
+                                lancamentos={this.state.lancamentos}
+                                deleteAction={this.onShowConfirmDelete}
+                                editAction={this.onEditLancamento}
+                                updateStatusAction={this.atualizarStatus} />
                         </div>
                     </div>
                 </div>
                 <div>
-                <Dialog header="Confirmação!" 
-                        visible={this.state.exibeConfirmacaoDelecao} 
-                        style={{ width: '50vw' }} 
-                        modal ={true}
-                        footer={confirmDeleteActions} 
-                        onHide={() => this.onHideConfirmDelete() }>
-                    <p>Confirma a deleção deste lancamento?</p>
-                </Dialog>
+                    <Dialog header="Confirmação!"
+                        visible={this.state.exibeConfirmacaoDelecao}
+                        style={{ width: '50vw' }}
+                        modal={true}
+                        footer={confirmDeleteActions}
+                        onHide={() => this.onHideConfirmDelete()}>
+                        <p>Confirma a deleção deste lancamento?</p>
+                    </Dialog>
                 </div>
             </Card>
         )
